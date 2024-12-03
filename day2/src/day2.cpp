@@ -80,11 +80,10 @@ int main() {
     sequences.push_back(sequence);
   }
 
-  int count(0);
-  for (const auto &s : sequences) {
-    if (is_sequence_safe(s, true)) {
-      ++count;
-    }
-  }
-  cout << "safe: " << count << endl;
+  cout << "safe: "
+       << std::count_if(sequences.begin(), sequences.end(),
+                        [](const auto &sequence) {
+                          return is_sequence_safe(sequence, true);
+                        })
+       << endl;
 }
