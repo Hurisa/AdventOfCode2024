@@ -1,3 +1,4 @@
+#include <boost/optional.hpp>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -7,7 +8,54 @@
 
 using namespace std;
 
-float process_string(const auto str) {
+vector<size_t> get_indices_for_pattern(const regex pattern, const string str) {
+  std::smatch matches;
+  std::vector<size_t> indices;
+  auto begin = str.cbegin();
+  auto end = str.cend();
+  while (std::regex_search(begin, end, matches, pattern)) {
+    const auto position = begin - str.cbegin() + matches.position(0);
+    indices.push_back(position);
+    begin = matches.suffix().first;
+  }
+  return indices;
+}
+
+boost::optional<size_t>
+get_relevant_action_index_for_position(const vector<size_t> action_indices,
+                                       size_t position) {
+  if(action_indices.size()==0)
+  {
+    return boost::none;
+  }
+
+
+  auto it =
+      std::lower_bound(action_indices.begin(), action_indices.end(), position);
+  
+  if(*it == *action_indices.data())
+  {
+    return boost::none;
+  }
+ 
+  --it;
+  if (find(action_indices.begin(), action_indices.end(), *it) == action_indices.end())
+  {
+    return boost::none;
+  }
+
+  return *it;
+}
+
+long process_string(const auto str) {
+
+  std::regex do_pattern(R"(do\(\))");
+  const auto do_indices = get_indices_for_pattern(do_pattern, str);
+
+
+  std::regex dont_pattern(R"(don't\(\))");
+  const auto dont_indices = get_indices_for_pattern(dont_pattern, str);
+  
   std::regex pattern(R"(mul\((\d{1,3}),(\d{1,3})\))");
   std::smatch matches;
 
@@ -18,13 +66,24 @@ float process_string(const auto str) {
   while (std::regex_search(begin, end, matches, pattern)) {
     float d1 = std::stoi(matches[1].str());
     float d2 = std::stoi(matches[2].str());
-    parcels.push_back(d1 * d2);
-    std::cout << "Found match: mul(" << d1 << "," << d2 << ")" << std::endl;
-    std::cout << "Extracted digits: d1 = " << d1 << ", d2 = " << d2
-              << std::endl;
 
-    begin = matches.suffix().first; // Move to the rest of the string
+    const auto position = begin - str.cbegin() + matches.position(0);
+    // cout << "mul(" << d1 << "," << d2 << ")" << endl;
+
+    const auto do_index =
+        get_relevant_action_index_for_position(do_indices, position);
+    const auto dont_index =
+        get_relevant_action_index_for_position(dont_indices, position);
+
+    auto compute = do_index && dont_index && *dont_index < *do_index ||
+                         do_index && !dont_index || !do_index && !dont_index;
+    // cout<<compute<<endl;
+    if (compute) {
+      parcels.push_back(long(d1 * d2));
+    }
+    begin = matches.suffix().first;
   }
+
   return long(accumulate(parcels.begin(), parcels.end(), 0.0));
 }
 
@@ -44,12 +103,19 @@ int main() {
     v.push_back(line);
   }
 
-  cout << "Result 1: "
-       << long(accumulate(v.begin(), v.end(), 0.0,
-                          [](double sum, const string &str) {
-                            return sum + process_string(str);
-                          }))
-       << endl;
+  const auto full_string = std::accumulate(v.begin(), v.end(), std::string());
+  cout << long(process_string(full_string))<< endl;
+  // cout<<"number of lines " << v.size()<< endl;
+  // for (const auto l : v)
+  // {
+  //   cout<<" line "<<process_string(l)<< " " <<endl;
+  // }
+  // cout<< full_string<<endl;
+  // cout << long(accumulate(v.begin(), v.end(), 0.0,
+  //                         [](long sum, const string &str) {
+  //                           return long(sum) + long(process_string(str));
+  //                         }))
+  //   << endl;
 
   return 0;
 }
