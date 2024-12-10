@@ -24,38 +24,34 @@ vector<size_t> get_indices_for_pattern(const regex pattern, const string str) {
 boost::optional<size_t>
 get_relevant_action_index_for_position(const vector<size_t> action_indices,
                                        size_t position) {
-  if(action_indices.size()==0)
-  {
+  if (action_indices.size() == 0) {
     return boost::none;
   }
-
 
   auto it =
       std::lower_bound(action_indices.begin(), action_indices.end(), position);
-  
-  if(*it == *action_indices.data())
-  {
+
+  if (*it == *action_indices.data()) {
     return boost::none;
   }
- 
+
   --it;
-  if (find(action_indices.begin(), action_indices.end(), *it) == action_indices.end())
-  {
+  if (find(action_indices.begin(), action_indices.end(), *it) ==
+      action_indices.end()) {
     return boost::none;
   }
 
   return *it;
 }
 
-long process_string(const auto str) {
+long process_string(const std::string &str, const bool &part1) {
 
   std::regex do_pattern(R"(do\(\))");
   const auto do_indices = get_indices_for_pattern(do_pattern, str);
 
-
   std::regex dont_pattern(R"(don't\(\))");
   const auto dont_indices = get_indices_for_pattern(dont_pattern, str);
-  
+
   std::regex pattern(R"(mul\((\d{1,3}),(\d{1,3})\))");
   std::smatch matches;
 
@@ -68,16 +64,15 @@ long process_string(const auto str) {
     float d2 = std::stoi(matches[2].str());
 
     const auto position = begin - str.cbegin() + matches.position(0);
-    // cout << "mul(" << d1 << "," << d2 << ")" << endl;
 
     const auto do_index =
         get_relevant_action_index_for_position(do_indices, position);
     const auto dont_index =
         get_relevant_action_index_for_position(dont_indices, position);
 
-    auto compute = do_index && dont_index && *dont_index < *do_index ||
-                         do_index && !dont_index || !do_index && !dont_index;
-    // cout<<compute<<endl;
+    auto compute = part1 || do_index && dont_index && *dont_index < *do_index ||
+                   do_index && !dont_index || !do_index && !dont_index;
+
     if (compute) {
       parcels.push_back(long(d1 * d2));
     }
@@ -90,7 +85,6 @@ long process_string(const auto str) {
 int main() {
 
   const string file_path = "/home/hugo/AoC/AdventOfCode2024/day3/data.txt";
-  // Open the file
   ifstream file(file_path);
   if (!file) {
     cerr << "Error: Unable to open file at " << file_path << endl;
@@ -104,18 +98,8 @@ int main() {
   }
 
   const auto full_string = std::accumulate(v.begin(), v.end(), std::string());
-  cout << long(process_string(full_string))<< endl;
-  // cout<<"number of lines " << v.size()<< endl;
-  // for (const auto l : v)
-  // {
-  //   cout<<" line "<<process_string(l)<< " " <<endl;
-  // }
-  // cout<< full_string<<endl;
-  // cout << long(accumulate(v.begin(), v.end(), 0.0,
-  //                         [](long sum, const string &str) {
-  //                           return long(sum) + long(process_string(str));
-  //                         }))
-  //   << endl;
+  cout << "Part 1: " << long(process_string(full_string, true)) << endl;
+  cout << "Part 2: " << long(process_string(full_string, false)) << endl;
 
   return 0;
 }
