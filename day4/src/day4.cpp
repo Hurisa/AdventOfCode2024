@@ -189,10 +189,6 @@ int main() {
         if (!ne || !se || !nw || !ne) {
           continue;
         }
-        // if (*(ne) == *(sw) || *nw == *se)
-        // {
-        //   continue;
-        // }
 
         const auto ne_position = *ne;
         const auto sw_position = *sw;
@@ -203,9 +199,7 @@ int main() {
         const auto se_string = data[se_position.x][se_position.y];
         const auto nw_string = data[nw_position.x][nw_position.y];
         const auto sw_string = data[sw_position.x][sw_position.y];
-        cout << nw_string << " " << ne_string << endl;
-        cout << " " << "A" << " " << endl;
-        cout << sw_string << " " << se_string << endl;
+
         bool option1 = ne_string == "M" && sw_string == "S" &&
                        nw_string == "M" && se_string == "S";
         bool option2 = ne_string == "S" && sw_string == "M" &&
@@ -214,9 +208,6 @@ int main() {
                        nw_string == "M" && se_string == "S";
         bool option4 = ne_string == "M" && sw_string == "S" &&
                        nw_string == "S" && se_string == "M";
-        cout << option1 << " " << option2 << " " << option3 << " " << option4
-             << endl;
-        cout << "-------------------------------" << endl;
 
         if (option1 || option2 || option3 || option4) {
           total_2++;
